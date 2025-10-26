@@ -21,7 +21,11 @@ class Cachier extends Thread {
             while (active) {
                 Transaction transaction = bank.getTransactionQueue().take();
                 /* Обработка транзакции */
-                transaction.execute(bank);
+                try {
+                    transaction.execute(bank);
+                } catch (TransactionException e) {
+                    bank.notifyObservers(e.getMessage());
+                }
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
