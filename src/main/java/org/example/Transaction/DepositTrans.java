@@ -1,4 +1,7 @@
-package org.example;
+package org.example.Transaction;
+
+import org.example.Bank;
+import org.example.Client;
 
 public class DepositTrans implements Transaction {
     private final int transId;
@@ -11,12 +14,9 @@ public class DepositTrans implements Transaction {
         this.amount = amount;
     }
 
-    public int getClientId() {
-        return clientId;
-    }
-
-    public double getAmount() {
-        return amount;
+    @Override
+    public int getTransId() {
+        return transId;
     }
 
     @Override
@@ -40,14 +40,12 @@ public class DepositTrans implements Transaction {
                     resultAmount = client.getBalance() + amount;
                     client.setBalance(resultAmount);
                     bank.replaceClient(client);
-                    bank.notifyObservers("Клиент " + client.getId() + "сделал пополнение баланса на " + amount + "в рамках транзакции " + transId);
+                    bank.notifyObservers("Клиент " + client.getId() + " сделал пополнение баланса на " + amount + " в рамках транзакции " + transId);
                 } finally {
                     client.getLock().unlock();
                 }
                 break;
             }
         }
-
-
     }
 }

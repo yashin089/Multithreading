@@ -1,6 +1,9 @@
-package org.example;
+package org.example.Transaction;
 
-public class TransferFundsTrans implements Transaction{
+import org.example.Bank;
+import org.example.Client;
+
+public class TransferFundsTrans implements Transaction {
     private final int transId;
     private final int senderId;
     private final int receiverId;
@@ -13,26 +16,13 @@ public class TransferFundsTrans implements Transaction{
         this.amount = amount;
     }
 
+    @Override
     public int getTransId() {
         return transId;
     }
 
-    public double getAmount() {
-        return amount;
-    }
-
-    public int getSenderId() {
-        return senderId;
-    }
-
-    public int getReceiverId() {
-        return receiverId;
-    }
-
     @Override
     public void execute(Bank bank) throws TransactionException {
-        double resultAmount;
-
         if (bank == null) {
             throw new TransactionException("При выполнении тразакции " + transId + " не удалось определить банк");
         }
@@ -47,10 +37,17 @@ public class TransferFundsTrans implements Transaction{
             throw new TransactionException("При выполнении тразакции " + transId + " не удалось определить клиента получателя");
         }
 
+        if (sender.getId() == receiver.getId()) {
+            throw new TransactionException("При выполнении тразакции " + transId + " клиент " + sender.getId() + " попытался перевести деньги сам себе");
+        }
+
         while (true) {
             if (sender.getLock().tryLock()) {
                 if (receiver.getLock().tryLock()) {
                     try {
+                        if (sender.getBalance() < amount) {
+                            throw new TransactionException("При выполнении тразакции " + transId + " у клиента " + sender.getId() + " оказалось недостаточно средств");
+                        }
                         sender.setBalance(sender.getBalance() - amount);
                         receiver.setBalance(sender.getBalance() + amount);
                         bank.replaceClient(sender);

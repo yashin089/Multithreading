@@ -1,4 +1,7 @@
-package org.example;
+package org.example.Transaction;
+
+import org.example.Bank;
+import org.example.Client;
 
 public class WithdrawTrans implements Transaction {
     private final int transId;
@@ -11,23 +14,15 @@ public class WithdrawTrans implements Transaction {
         this.amount = amount;
     }
 
+    @Override
     public int getTransId() {
         return transId;
-    }
-
-    public int getClientId() {
-        return clientId;
-    }
-
-    public double getAmount() {
-        return amount;
     }
 
     @Override
     public void execute(Bank bank) throws TransactionException {
         Client client;
         double resultAmount;
-        String logMessage;
 
         if (bank == null) {
             throw new TransactionException("При выполнении тразакции " + transId + " не удалось определить банк");
@@ -41,10 +36,13 @@ public class WithdrawTrans implements Transaction {
         while (true) {
             if (client.getLock().tryLock()) {
                 try {
+                    if (client.getBalance() < amount) {
+                        throw new TransactionException("При выполнении тразакции " + transId + " у клиента " + client.getId() + " оказалось недостаточно средств");
+                    }
                     resultAmount = client.getBalance() - amount;
                     client.setBalance(resultAmount);
                     bank.replaceClient(client);
-                    bank.notifyObservers("Клиент " + client.getId() + "сделал снятие денежных средств на " + amount + "в рамках транзакции " + transId);
+                    bank.notifyObservers("Клиент " + client.getId() + " сделал снятие денежных средств на " + amount + " в рамках транзакции " + transId);
                 } finally {
                     client.getLock().unlock();
                 }
