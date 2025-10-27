@@ -76,6 +76,19 @@ public class Bank {
             executorService.execute(cachier);
         }
         executorService.shutdown();
+
+        //Вместо засыпания можно в данном классе создать CountDownLatch(1)
+        //создать транзакцию "завершения работы" последним элементом в очереди с вызовом внутри countDown(),
+        //а в данном месте await() у CountDownLatch
+        try {
+            Thread.currentThread().sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (Cachier cachier : cachiers){
+            cachier.interrupt();
+        }
     }
 
 }

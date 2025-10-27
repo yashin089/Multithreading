@@ -45,7 +45,7 @@ public class ExchangeCurrencyTrans implements Transaction {
                         throw new TransactionException("При выполнении тразакции " + transId + " у клиента " + client.getId() + " оказалось недостаточно средств");
                     }
                     try {
-                        exchRateToCurr = bank.getExchangeRates().get(fromCurrency);
+                        exchRateToCurr = bank.getExchangeRates().get(toCurrency);
                         resultAmount = amount / exchRateToCurr;
                     } catch (Exception e) {
                         throw new TransactionException("При выполнении тразакции " + transId + " не удалось определить курс");
