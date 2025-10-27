@@ -11,7 +11,3 @@
 ### Quick Start
 1. Запускаем программу
 2. Смотрим в консоль
-
-```Java
-console.log('Hello Markdown!');
-```
