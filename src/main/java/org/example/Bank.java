@@ -9,11 +9,14 @@ import java.util.concurrent.*;
 
 public class Bank {
 
+    private final int COUNT_THREAD_POOL = 4;
+
     private final ConcurrentMap<Integer, Client> clients = new ConcurrentHashMap<>();
     private final BlockingQueue<Transaction> transactions = new LinkedBlockingQueue<>();
     private final ConcurrentMap<String, Double> exchangeRates = new ConcurrentHashMap<>();
     private final List<Observer> observers = new CopyOnWriteArrayList<>();
     private final List<Cachier> cachiers = new ArrayList<>();
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public Bank() {
         ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
@@ -67,28 +70,43 @@ public class Bank {
         cachiers.add(cachier);
     }
 
+    public CountDownLatch getCountDownLatch() {
+        return countDownLatch;
+    }
+
     public void star() {
         if (cachiers.isEmpty()) {
             return;
         }
-        ExecutorService executorService = Executors.newFixedThreadPool(cachiers.size());
+
+        ExecutorService executorService = Executors.newFixedThreadPool(COUNT_THREAD_POOL);
         for (Cachier cachier : cachiers) {
             executorService.execute(cachier);
         }
-        executorService.shutdown();
 
-        //Вместо засыпания можно в данном классе создать CountDownLatch(1)
-        //создать транзакцию "завершения работы" последним элементом в очереди с вызовом внутри countDown(),
-        //а в данном месте await() у CountDownLatch
         try {
-            Thread.currentThread().sleep(3000);
+            countDownLatch.await();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
-        for (Cachier cachier : cachiers){
-            cachier.interrupt();
+        this.notifyObservers("Банк завершает работу");
+        for (Cachier cachier : cachiers) {
+            cachier.stopJob();
         }
+
+        executorService.shutdownNow();
+
+        //На всякий случай
+        try {
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                System.out.println("\nStill waiting after 3s: calling System.exit(0)...");
+                System.exit(0);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("\nExiting normally...");
     }
 
 }

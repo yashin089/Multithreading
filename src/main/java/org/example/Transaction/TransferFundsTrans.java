@@ -52,7 +52,7 @@ public class TransferFundsTrans implements Transaction {
                         receiver.setBalance(sender.getBalance() + amount);
                         bank.replaceClient(sender);
                         bank.replaceClient(receiver);
-                        bank.notifyObservers("Клиент " + sender.getId() + "сделал перевод денежных средств в размере " + amount + " клиенту " + receiver.getId() + " в рамках транзакции " + transId);
+                        bank.notifyObservers("Клиент " + sender.getId() + " сделал перевод денежных средств в размере " + amount + " клиенту " + receiver.getId() + " в рамках транзакции " + transId);
                     } finally {
                         receiver.getLock().unlock();
                         sender.getLock().unlock();
