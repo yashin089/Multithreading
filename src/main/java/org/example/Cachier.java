@@ -26,7 +26,7 @@ class Cachier extends Thread {
         try {
             while (active) {
                 bank.notifyObservers("Касса " + id + " получает транзакцию для обработки");
-                    Transaction transaction = bank.getTransactionQueue().take();
+                Transaction transaction = bank.getTransactionQueue().take();
                 bank.notifyObservers("Касса " + id + " получена транзакция " + transaction.getTransId());
                 /* Обработка транзакции */
                 try {

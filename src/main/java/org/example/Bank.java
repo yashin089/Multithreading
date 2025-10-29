@@ -9,8 +9,6 @@ import java.util.concurrent.*;
 
 public class Bank {
 
-    private final int COUNT_THREAD_POOL = 4;
-
     private final ConcurrentMap<Integer, Client> clients = new ConcurrentHashMap<>();
     private final BlockingQueue<Transaction> transactions = new LinkedBlockingQueue<>();
     private final ConcurrentMap<String, Double> exchangeRates = new ConcurrentHashMap<>();
@@ -19,13 +17,10 @@ public class Bank {
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public Bank() {
-        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r);
-                thread.setDaemon(true);
-                return thread;
-            }
+        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1, r -> {
+            Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            return thread;
         });
         executor.scheduleAtFixedRate(() -> {
             double rateEUR = Math.random() * 100;
@@ -79,7 +74,7 @@ public class Bank {
             return;
         }
 
-        ExecutorService executorService = Executors.newFixedThreadPool(COUNT_THREAD_POOL);
+        ExecutorService executorService = Executors.newFixedThreadPool(cachiers.size());
         for (Cachier cachier : cachiers) {
             executorService.execute(cachier);
         }
@@ -96,17 +91,5 @@ public class Bank {
         }
 
         executorService.shutdownNow();
-
-        //На всякий случай
-        try {
-            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
-                System.out.println("\nStill waiting after 3s: calling System.exit(0)...");
-                System.exit(0);
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("\nExiting normally...");
     }
-
 }
